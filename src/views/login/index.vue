@@ -255,7 +255,8 @@ $light_gray:#eee;
 .login-container {
   min-height: 100%;
   width: 100%;
-  background-color: $bg;
+  // background-color: $bg;
+  background-image: url(../backgroundImages/starry-sky-the-milky-way-tree-ppt-backgrounds-preview.jpg);
   overflow: hidden;
 
   .login-form {
