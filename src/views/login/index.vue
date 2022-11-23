@@ -1,6 +1,13 @@
 <template>
   <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
+    <el-form
+      ref="loginForm"
+      :model="loginForm"
+      :rules="loginRules"
+      class="login-form"
+      autocomplete="on"
+      label-position="left"
+    >
 
       <div class="title-container">
         <h3 class="title">Login Form</h3>
@@ -45,41 +52,69 @@
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
+      <slide-verify
+        ref="slideblock"
+        :l="50"
+        :r="12"
+        :w="400"
+        :h="150"
+        :accuracy="slide.accuracy"
+        :slider-text="slide.text"
+        @again="onAgain"
+        @fulfilled="onFulfilled"
+        @success="onSuccess"
+        @fail="onFail"
+        @refresh="onRefresh"
+      />
+      <div>{{ slide.msg }}</div>
 
-      <div style="position:relative">
-        <div class="tips">
-          <span>Username : admin</span>
-          <span>Password : any</span>
-        </div>
-        <div class="tips">
-          <span style="margin-right:18px;">Username : editor</span>
-          <span>Password : any</span>
-        </div>
+      <el-button
+        :loading="loading"
+        type="primary"
+        style="width:100%;height:50px;margin-bottom:30px;background-color: #4AB7BD;border-color: #4AB7BD;font-size: 18px;margin-top: 20px;"
+        @click.native.prevent="handleLogin"
+      >登录
+      </el-button>
 
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
-          Or connect with
-        </el-button>
+      <!--      <div style="position:relative">-->
+      <!--        <div class="tips">-->
+      <!--          <span>Username : admin</span>-->
+      <!--          <span>Password : any</span>-->
+      <!--        </div>-->
+      <!--        <div class="tips">-->
+      <!--          <span style="margin-right:18px;">Username : editor</span>-->
+      <!--          <span>Password : any</span>-->
+      <!--        </div>-->
+
+      <!--        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">-->
+      <!--          Or connect with-->
+      <!--        </el-button>-->
+      <!--      </div>-->
+
+      <div style="position:relative;float: left ">
+        <div style="float: left;margin-left: 150px"><svg-icon icon-class="weixin" class="svg-icon-social" /></div>
+        <div style="float: left;margin-left: 30px"><svg-icon icon-class="weibo" class="svg-icon-social" /></div>
+        <div style="float: left;margin-left: 30px"><svg-icon icon-class="google" class="svg-icon-social" /></div>
       </div>
     </el-form>
 
-    <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business simulation! ! !
-      <br>
-      <br>
-      <br>
-      <social-sign />
-    </el-dialog>
+    <!--    <el-dialog title="Or connect with" :visible.sync="showDialog">-->
+    <!--      Can not be simulated on local, so please combine you own business simulation! ! !-->
+    <!--      <br>-->
+    <!--      <br>-->
+    <!--      <br>-->
+    <!--      <social-sign />-->
+    <!--    </el-dialog>-->
+
   </div>
 </template>
 
 <script>
 import { validUsername } from '@/utils/validate'
-import SocialSign from './components/SocialSignin'
 
 export default {
   name: 'Login',
-  components: { SocialSign },
+  components: { },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
@@ -109,7 +144,13 @@ export default {
       loading: false,
       showDialog: false,
       redirect: undefined,
-      otherQuery: {}
+      otherQuery: {},
+      slide: {
+        msg: '',
+        text: '向右滑动',
+        // 精确度小，可允许的误差范围小；为1时，则表示滑块要与凹槽完全重叠，才能验证成功。默认值为5
+        accuracy: 1
+      }
     }
   },
   watch: {
@@ -138,6 +179,32 @@ export default {
     // window.removeEventListener('storage', this.afterQRScan)
   },
   methods: {
+    onSuccess(times) {
+      console.log('验证通过，耗时 ' + times + '毫秒')
+      // this.slide.msg = 'login success, 耗时${(times / 1000).toFixed(1)}s'
+    },
+    onFail() {
+      console.log('验证不通过')
+      this.slide.msg = ''
+    },
+    onRefresh() {
+      console.log('点击了刷新小图标')
+      this.slide.msg = ''
+    },
+    onFulfilled() {
+      console.log('刷新成功啦！')
+    },
+    onAgain() {
+      console.log('检测到非人为操作的哦！')
+      this.slide.msg = 'try again'
+      // 刷新
+      this.$refs.slideblock.reset()
+    },
+    handleClick() {
+      // 父组件直接可以调用刷新方法
+      this.$refs.slideblock.reset()
+    },
+
     checkCapslock(e) {
       const { key } = e
       this.capsTooltip = key && key.length === 1 && (key >= 'A' && key <= 'Z')
@@ -204,9 +271,9 @@ export default {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
-$light_gray:#fff;
-$cursor: #fff;
+$bg: #4AB7BD;
+$light_gray: #4AB7BD;
+$cursor: #4AB7BD;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
@@ -222,50 +289,70 @@ $cursor: #fff;
     width: 85%;
 
     input {
+      font-size: 18px;
+      font-weight: bolder;
       background: transparent;
-      border: 0px;
+      border: 50px;
       -webkit-appearance: none;
-      border-radius: 0px;
+      border-radius: 0;
       padding: 12px 5px 12px 15px;
       color: $light_gray;
       height: 47px;
       caret-color: $cursor;
 
       &:-webkit-autofill {
-        box-shadow: 0 0 0px 1000px $bg inset !important;
+        box-shadow: 0 0 0 1000px $bg inset !important;
         -webkit-text-fill-color: $cursor !important;
       }
     }
   }
 
   .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid $cursor;
+    background: rgba(0, 0, 1, 0.1);
     border-radius: 5px;
     color: #454545;
+    margin-top: 30px;
+  }
+
+  .el-form-item__error {
+    font-size: 12px;
+  }
+
+  .svg-icon-social {
+    width: 2em;
+    height: 2em;
+    vertical-align: -0.15em;
+    fill: currentColor;
+    overflow: hidden;
   }
 }
 </style>
 
 <style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
+
+$bg: #2d3a4b;
+$dark_gray: #4AB7BD;
+$light_gray: #eee;
 
 .login-container {
   min-height: 100%;
   width: 100%;
   // background-color: $bg;
-  background-image: url(../backgroundImages/starry-sky-the-milky-way-tree-ppt-backgrounds-preview.jpg);
+  background: no-repeat url(../backgroundImages/login-page-background.jpg);
+  background-size: cover;
   overflow: hidden;
 
   .login-form {
     position: relative;
     width: 520px;
+    height: 620px;
     max-width: 100%;
-    padding: 160px 35px 0;
-    margin: 0 auto;
+    padding: 20px 35px 0;
+    margin: 50px 55% auto;
     overflow: hidden;
+    box-shadow: 0 0 25px #cac6c6;
+    border-radius: 10px;
   }
 
   .tips {
@@ -293,10 +380,12 @@ $light_gray:#eee;
 
     .title {
       font-size: 26px;
-      color: $light_gray;
-      margin: 0px auto 40px auto;
+      color: #4AB7BD;
+      margin: 0 auto 40px auto;
       text-align: center;
       font-weight: bold;
+      display: flex;
+      justify-content: center;
     }
   }
 
