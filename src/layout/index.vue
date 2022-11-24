@@ -49,6 +49,9 @@ export default {
       }
     }
   },
+  created() {
+    console.log('123123123')
+  },
   methods: {
     handleClickOutside() {
       this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
