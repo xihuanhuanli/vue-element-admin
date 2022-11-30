@@ -1,5 +1,5 @@
-import { asyncRoutes, constantRoutes } from '@/router'
-
+import { constantRoutes } from '@/router'
+import Layout from '@/layout'
 /**
  * Use meta.role to determine if the current user has permission
  * @param roles
@@ -47,18 +47,54 @@ const mutations = {
 }
 
 const actions = {
-  generateRoutes({ commit }, roles) {
+  generateRoutes({ commit }, menus) {
     return new Promise(resolve => {
-      let accessedRoutes
-      if (roles.includes('admin')) {
-        accessedRoutes = asyncRoutes || []
-      } else {
-        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
-      }
+    //   let accessedRoutes
+    //   if (roles.includes('admin')) {
+    //     accessedRoutes = asyncRoutes || []
+    //   } else {
+    //     accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+    //   }
+      const accessedRoutes = []
+      generaMenu(accessedRoutes, menus)
       commit('SET_ROUTES', accessedRoutes)
       resolve(accessedRoutes)
     })
   }
+}
+
+/**
+ * 静态路由懒加载
+ * @param view  格式必须为 xxx/xxx 开头不要加斜杠
+ * @returns
+ */
+export const loadView = (view) => {
+  return (resolve) => require([`@/views/${view}`], resolve)
+}
+
+/**
+ * 把从后端查询的菜单数据拼装成路由格式的数据
+ * @param routes
+ * @param data 后端返回的菜单数据
+ */
+export function generaMenu(routes, data) {
+  data.forEach(item => {
+    const menu = {
+      path: item.url,
+      component: item.component === '#' ? Layout : loadView(item.component),
+      // hidden: item.status === 0, // 状态为0的隐藏
+      redirect: item.redirect,
+      children: [],
+      name: item.name,
+      meta: item.meta
+    }
+
+    if (item.children) {
+      generaMenu(menu.children, item.children)
+    }
+    routes.push(menu)
+  })
+  return routes
 }
 
 export default {
